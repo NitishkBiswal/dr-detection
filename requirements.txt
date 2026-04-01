@@ -5,3 +5,8 @@ timm
 pillow
 requests
 gdown
+pyrebase4
+google-generativeai
+reportlab
+pandas
+matplotlib
