@@ -38,16 +38,16 @@ model_gemini = genai.GenerativeModel("gemini-1.5-flash")
 # -----------------------------
 # FIREBASE
 # -----------------------------
-firebase_config = {
    # // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  apiKey: "AIzaSyALcofpX68Ok6lA-TxOtmW0-sHx9WoMWeA",
-  authDomain: "diabetese-detection-project.firebaseapp.com",
-  projectId: "diabetese-detection-project",
-  storageBucket: "diabetese-detection-project.firebasestorage.app",
-  messagingSenderId: "264109211554",
-  appId: "1:264109211554:web:5f46144b1b8695a0883cfb",
-  measurementId: "G-GCR2Q4TY6D",
-  databaseURL: "https://diabetese-detection-project-default-rtdb.firebaseio.com/"
+firebase_config = {
+    "apiKey": "AIzaSyALcofPx68Ok6lA-Tx0tmW0-sHx9WoMwEA",
+    "authDomain": "diabetese-detection-project.firebaseapp.com",
+    "projectId": "diabetese-detection-project",
+    "storageBucket": "diabetese-detection-project.appspot.com",
+    "messagingSenderId": "264109211554",
+    "appId": "1:264109211554:web:5f46144b1b8695a0883cfb",
+     "measurementId": "G-GCR2Q4TY6D", 
+    "databaseURL": "https://diabetese-detection-project-default-rtdb.firebaseio.com/"
 
 }
 
