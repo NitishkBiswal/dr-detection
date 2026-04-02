@@ -16,9 +16,17 @@ st.set_page_config(page_title="DR Detection", layout="centered")
 
 st.markdown("""
 <style>
+/* Hide top header */
 header {visibility: hidden;}
+
+/* Hide GitHub & Fork */
 a[href*="github"] {display: none !important;}
 button[title*="Fork"] {display: none !important;}
+
+/* Hide bottom-right floating buttons */
+div[data-testid="stStatusWidget"] {display: none !important;}
+div[data-testid="stDecoration"] {display: none !important;}
+div[class*="floating"] {display: none !important;}
 </style>
 """, unsafe_allow_html=True)
 
