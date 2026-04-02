@@ -14,6 +14,14 @@ from datetime import date
 # -----------------------------
 st.set_page_config(page_title="DR Detection", layout="centered")
 
+st.markdown("""
+<style>
+header {visibility: hidden;}
+a[href*="github"] {display: none !important;}
+button[title*="Fork"] {display: none !important;}
+</style>
+""", unsafe_allow_html=True)
+
 # -----------------------------
 # TITLE
 # -----------------------------
