@@ -5,11 +5,9 @@ import gdown
 import os
 from PIL import Image
 import torchvision.transforms as transforms
-import google.generativeai as genai
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as RLImage
 from reportlab.lib.styles import getSampleStyleSheet
 from datetime import date
-import time
 
 # -----------------------------
 # PAGE CONFIG
@@ -17,65 +15,25 @@ import time
 st.set_page_config(page_title="DR Detection", layout="centered")
 
 # -----------------------------
-# CUSTOM CHAT UI CSS
-# -----------------------------
-st.markdown("""
-<style>
-.chat-container {
-    display: flex;
-    align-items: flex-start;
-    margin-bottom: 10px;
-}
-.chat-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background-color: #4CAF50;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    margin-right: 10px;
-}
-.chat-bubble {
-    background-color: #262730;
-    padding: 10px 15px;
-    border-radius: 15px;
-    max-width: 80%;
-}
-.user-bubble {
-    background-color: #4CAF50;
-    color: white;
-    margin-left: auto;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# -----------------------------
-# GEMINI API
-# -----------------------------
-genai.configure(api_key="AIzaSyCooaCYhfOzuc19c96hEeviGd8DtW39f6M")
-model_gemini = genai.GenerativeModel("gemini-1.5-flash-latest")
-
-# -----------------------------
 # TITLE
 # -----------------------------
 st.title("👁️ Diabetic Retinopathy Detection System")
 
 # -----------------------------
-# ABOUT
+# ABOUT SECTION
 # -----------------------------
-st.sidebar.title("🧠 About")
+st.sidebar.title(" About")
+
 st.sidebar.write("""
-Diabetic Retinopathy damages the retina due to diabetes.
+Diabetic retinopathy is a medical condition where chronic high blood sugar levels damage the delicate blood vessels in the retina, the light-sensitive tissue at the back of the eye.
+Over time, these vessels can swell, leak fluid, or close off entirely, sometimes triggering the growth of abnormal new vessels that further interfere with vision.
 
-Effects:
-- Blurred vision
-- Floaters
-- Vision loss
-- Blindness (if untreated)
-
-Early detection is critical.
+As the condition progresses, the structural damage to the retinal blood vessels leads to several significant visual impairments:
+Vitreous Hemorrhage: New, fragile blood vessels may bleed into the clear, jelly-like substance (vitreous) that fills the center of the eye, causing dark spots or "floaters."
+Macular Edema: Leaking fluid can cause the macula (the part of the retina responsible for sharp, central vision) to swell, resulting in severe blurring or distortion.
+Retinal Detachment: Scar tissue from abnormal vessel growth can pull the retina away from the back of the eye, which is a surgical emergency.
+Glaucoma: Neovascularization (new vessel growth) can block the normal drainage of fluid out of the eye, increasing eye pressure and damaging the optic nerve.
+Early detection is very important.
 """)
 
 # -----------------------------
@@ -97,7 +55,7 @@ blood_group = st.selectbox(
 )
 
 # -----------------------------
-# AGE
+# AGE CALCULATION
 # -----------------------------
 def calculate_age(dob):
     today = date.today()
@@ -109,7 +67,7 @@ age_years, age_days = calculate_age(dob)
 st.write(f"Age: {age_years} years ({age_days} days)")
 
 # -----------------------------
-# MODEL
+# MODEL LOAD
 # -----------------------------
 MODEL_PATH = "model.pth"
 MODEL_URL = "https://drive.google.com/uc?id=1yDdDELohhVrnI_SSRAQAbqkruoV0fBpw"
@@ -117,6 +75,7 @@ MODEL_URL = "https://drive.google.com/uc?id=1yDdDELohhVrnI_SSRAQAbqkruoV0fBpw"
 if not os.path.exists(MODEL_PATH):
     st.info("Downloading model...")
     gdown.download(MODEL_URL, MODEL_PATH)
+    st.success("Model ready")
 
 @st.cache_resource
 def load_model():
@@ -136,7 +95,7 @@ file = st.file_uploader("Upload Retina Image", type=["jpg", "png", "jpeg"])
 
 if file and name:
     img = Image.open(file).convert("RGB")
-    st.image(img)
+    st.image(img, caption="Uploaded Image")
 
     image_path = "uploaded.jpg"
     img.save(image_path)
@@ -156,13 +115,14 @@ if file and name:
     st.success(f"Prediction: {labels[pred]}")
 
     # -----------------------------
-    # PDF
+    # PDF GENERATION
     # -----------------------------
     def generate_pdf():
         doc = SimpleDocTemplate("report.pdf")
         styles = getSampleStyleSheet()
 
         content = []
+
         content.append(Paragraph("Diabetic Retinopathy Report", styles["Title"]))
         content.append(Spacer(1, 10))
 
@@ -172,8 +132,9 @@ if file and name:
         content.append(Paragraph(f"Blood Group: {blood_group}", styles["Normal"]))
 
         content.append(Spacer(1, 10))
+
         content.append(Paragraph(f"Prediction: {labels[pred]}", styles["Heading2"]))
-        content.append(Paragraph("Advice: Consult doctor", styles["Normal"]))
+        content.append(Paragraph("Advice: Consult an ophthalmologist.", styles["Normal"]))
 
         content.append(Spacer(1, 10))
         content.append(RLImage(image_path, width=200, height=200))
@@ -184,53 +145,8 @@ if file and name:
     pdf = generate_pdf()
 
     with open(pdf, "rb") as f:
-        st.download_button("📄 Download Report", f, file_name="DR_Report.pdf")
-
-# -----------------------------
-# CHATBOT
-# -----------------------------
-st.subheader("💬 Chat with Netra")
-
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
-
-user_query = st.text_input("Ask about eye health")
-
-def netra_ai(q):
-    prompt = f"You are Netra, an eye specialist AI. Answer clearly: {q}"
-    response = model_gemini.generate_content(prompt)
-    return response.text
-
-if "last_query_time" not in st.session_state:
-    st.session_state.last_query_time = 0
-
-if st.button("Ask Netra"):
-    if user_query:
-        if time.time() - st.session_state.last_query_time > 5:
-            st.session_state.last_query_time = time.time()
-
-            st.session_state.chat_history.append(("user", user_query))
-            reply = netra_ai(user_query)
-            st.session_state.chat_history.append(("bot", reply))
-        else:
-            st.warning("Wait a few seconds")
-
-# -----------------------------
-# DISPLAY CHAT
-# -----------------------------
-for role, message in st.session_state.chat_history:
-    if role == "user":
-        st.markdown(f"""
-        <div class="chat-container" style="justify-content:flex-end;">
-            <div class="chat-bubble user-bubble">{message}</div>
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown(f"""
-        <div class="chat-container">
-            <div class="chat-avatar">👁️</div>
-            <div class="chat-bubble">{message}</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-st.warning("⚠️ AI is for guidance only. Consult doctor.")
+        st.download_button(
+            "📄 Download Report",
+            f,
+            file_name="DR_Report.pdf"
+        )
