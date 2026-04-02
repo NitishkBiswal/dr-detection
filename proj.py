@@ -38,7 +38,7 @@ st.title("Diabetic Retinopathy Detection System")
 # -----------------------------
 # ABOUT SECTION
 # -----------------------------
-st.sidebar.title("🧠 About")
+st.sidebar.title("About")
 
 st.sidebar.write("""
 Diabetic retinopathy is a medical condition where chronic high blood sugar levels damage the delicate blood vessels in the retina.
