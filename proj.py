@@ -22,22 +22,16 @@ st.title("👁️ Diabetic Retinopathy Detection System")
 # -----------------------------
 # ABOUT SECTION
 # -----------------------------
-st.sidebar.title(" About")
+st.sidebar.title("🧠 About")
 
 st.sidebar.write("""
-Diabetic retinopathy is a medical condition where chronic high blood sugar levels damage the delicate blood vessels in the retina, the light-sensitive tissue at the back of the eye.
-Over time, these vessels can swell, leak fluid, or close off entirely, sometimes triggering the growth of abnormal new vessels that further interfere with vision.
+Diabetic retinopathy is a medical condition where chronic high blood sugar levels damage the delicate blood vessels in the retina.
 
 Effects:
-
-As the condition progresses, the structural damage to the retinal blood vessels leads to several significant visual impairments:
-1)Vitreous Hemorrhage: New, fragile blood vessels may bleed into the clear, jelly-like substance (vitreous) that fills the center of the eye, causing dark spots or "floaters."
-
-2)Macular Edema: Leaking fluid can cause the macula (the part of the retina responsible for sharp, central vision) to swell, resulting in severe blurring or distortion.
-
-3)Retinal Detachment: Scar tissue from abnormal vessel growth can pull the retina away from the back of the eye, which is a surgical emergency.
-
-4)Glaucoma: Neovascularization (new vessel growth) can block the normal drainage of fluid out of the eye, increasing eye pressure and damaging the optic nerve.
+1) Vitreous Hemorrhage  
+2) Macular Edema  
+3) Retinal Detachment  
+4) Glaucoma  
 
 Early detection is very important.
 """)
@@ -71,6 +65,21 @@ def calculate_age(dob):
 
 age_years, age_days = calculate_age(dob)
 st.write(f"Age: {age_years} years ({age_days} days)")
+
+# -----------------------------
+# ADVICE FUNCTION (NEW 🔥)
+# -----------------------------
+def get_advice(prediction):
+    if prediction == "No DR":
+        return "No signs of diabetic retinopathy detected. Maintain healthy lifestyle and regular eye checkups."
+    elif prediction == "Mild":
+        return "Mild diabetic retinopathy detected. Monitor regularly and consult a doctor if symptoms increase."
+    elif prediction == "Moderate":
+        return "Moderate diabetic retinopathy detected. It is recommended to consult an ophthalmologist."
+    elif prediction == "Severe":
+        return "Severe diabetic retinopathy detected. Immediate medical attention is required."
+    else:
+        return "Proliferative diabetic retinopathy detected. Urgent treatment is necessary to prevent vision loss."
 
 # -----------------------------
 # MODEL LOAD
@@ -118,7 +127,14 @@ if file and name:
         probs = torch.softmax(output, dim=1)
         pred = torch.argmax(probs, dim=1).item()
 
-    st.success(f"Prediction: {labels[pred]}")
+    prediction_label = labels[pred]
+    advice = get_advice(prediction_label)
+
+    # -----------------------------
+    # OUTPUT
+    # -----------------------------
+    st.success(f"Prediction: {prediction_label}")
+    st.info(f"Advice: {advice}")
 
     # -----------------------------
     # PDF GENERATION
@@ -139,8 +155,8 @@ if file and name:
 
         content.append(Spacer(1, 10))
 
-        content.append(Paragraph(f"Prediction: {labels[pred]}", styles["Heading2"]))
-        content.append(Paragraph("Advice: Consult an ophthalmologist.", styles["Normal"]))
+        content.append(Paragraph(f"Prediction: {prediction_label}", styles["Heading2"]))
+        content.append(Paragraph(f"Advice: {advice}", styles["Normal"]))
 
         content.append(Spacer(1, 10))
         content.append(RLImage(image_path, width=200, height=200))
