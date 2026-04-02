@@ -54,7 +54,7 @@ st.markdown("""
 # -----------------------------
 # GEMINI API
 # -----------------------------
-genai.configure(api_key="AIzaSyA8DzYv0ume3BZW7-PEEG9at2Pi8bRUukg")
+genai.configure(api_key="AIzaSyCooaCYhfOzuc19c96hEeviGd8DtW39f6M")
 model_gemini = genai.GenerativeModel("gemini-1.5-flash-latest")
 
 # -----------------------------
