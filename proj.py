@@ -17,7 +17,7 @@ st.set_page_config(page_title="DR Detection", layout="centered")
 # -----------------------------
 # TITLE
 # -----------------------------
-st.title("👁️ Diabetic Retinopathy Detection System")
+st.title("Diabetic Retinopathy Detection System")
 
 # -----------------------------
 # ABOUT SECTION
