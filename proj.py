@@ -6,59 +6,33 @@ import os
 from PIL import Image
 import torchvision.transforms as transforms
 import pyrebase
-import datetime
-import pandas as pd
-import time
-import google.generativeai as genai
-from datetime import date
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as RLImage
-from reportlab.lib.styles import getSampleStyleSheet
-import matplotlib.pyplot as plt
 
 # -----------------------------
-# UI CLEAN
+# 🔐 HIDE STREAMLIT MENU
 # -----------------------------
 st.markdown("""
-<style>
-a[href*="github.com"] {display:none;}
-button[title="Edit this app"] {display:none;}
-button[title="Star this repo"] {display:none;}
-button[title="Share this app"] {display:none;}
-footer {visibility:hidden;}
-</style>
+    <style>
+    #MainMenu {visibility: hidden;}
+    header {visibility: hidden;}
+    footer {visibility: hidden;}
+    </style>
 """, unsafe_allow_html=True)
 
 # -----------------------------
-# GEMINI
+# 🔥 FIREBASE CONFIG (PUT YOUR KEYS)
 # -----------------------------
-genai.configure(api_key="AIzaSyA8DzYv0ume3BZW7-PEEG9at2Pi8bRUukg")
-model_gemini = genai.GenerativeModel("gemini-1.5-flash")
-
-
-# -----------------------------
-# FIREBASE
-# -----------------------------
-   # // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 firebase_config = {
-    "apiKey": "AIzaSyALcofPx68Ok6lA-Tx0tmW0-sHx9WoMwEA",
-    "authDomain": "diabetese-detection-project.firebaseapp.com",
-    "projectId": "diabetese-detection-project",
-    "storageBucket": "diabetese-detection-project.appspot.com",
-    "messagingSenderId": "264109211554",
-    "appId": "1:264109211554:web:5f46144b1b8695a0883cfb",
-     "measurementId": "G-GCR2Q4TY6D", 
-    "databaseURL": "https://diabetese-detection-project-default-rtdb.firebaseio.com/"
-
+    "apiKey": "YOUR_API_KEY",
+    "authDomain": "YOUR_DOMAIN",
+    "projectId": "YOUR_PROJECT_ID",
+    "storageBucket": "YOUR_BUCKET",
+    "messagingSenderId": "XXX",
+    "appId": "XXX",
+    "databaseURL": ""
 }
 
 firebase = pyrebase.initialize_app(firebase_config)
 auth = firebase.auth()
-db = firebase.database()
-
-# -----------------------------
-# ADMIN EMAIL
-# -----------------------------
-ADMIN_EMAILS = ["your_admin_email@gmail.com"]
 
 # -----------------------------
 # SESSION
@@ -67,7 +41,7 @@ if "user" not in st.session_state:
     st.session_state.user = None
 
 # -----------------------------
-# LOGIN
+# 🔐 LOGIN SYSTEM
 # -----------------------------
 if not st.session_state.user:
     st.title("🔐 Login System")
@@ -81,177 +55,115 @@ if not st.session_state.user:
         try:
             user = auth.sign_in_with_email_and_password(email, password)
             st.session_state.user = user
+            st.success("Login successful ✅")
             st.rerun()
         except:
-            st.error("Invalid credentials")
+            st.error("Invalid credentials ❌")
 
     if col2.button("Signup"):
         try:
             auth.create_user_with_email_and_password(email, password)
-            st.success("Account created")
+            st.success("Account created ✅")
         except:
-            st.error("Signup failed")
+            st.error("Signup failed ❌")
 
-    st.stop()
+    st.stop()   # ⛔ block app if not logged in
 
 # -----------------------------
-# ROLE
+# ROLE DETECTION
 # -----------------------------
 user_email = st.session_state.user["email"]
-role = "Admin" if user_email in ADMIN_EMAILS else "Patient"
 
-st.sidebar.success(f"Logged in as {role}")
+if user_email == "your_admin_email@gmail.com":
+    role = "Admin"
+else:
+    role = "Patient"
+
+st.sidebar.success(f"Logged in as: {role}")
 
 if st.sidebar.button("Logout"):
     st.session_state.user = None
     st.rerun()
 
 # -----------------------------
-# ADMIN PANEL
+# ADMIN DASHBOARD
 # -----------------------------
 if role == "Admin":
     st.title("👨‍⚕️ Admin Dashboard")
 
-    data = db.child("predictions").get()
-    records = []
-
-    if data.each():
-        for item in data.each():
-            records.append(item.val())
-
-    if records:
-        df = pd.DataFrame(records)
-
-        st.subheader("📊 Prediction Distribution")
-        st.bar_chart(df["prediction"].value_counts())
-
-        st.subheader("👥 User Activity")
-        st.bar_chart(df["email"].value_counts())
-
-        st.subheader("🔁 Repeat Users")
-        st.write(df["email"].value_counts()[df["email"].value_counts() > 1])
-
-        # Graph Download
-        plt.figure()
-        df["prediction"].value_counts().plot(kind="bar")
-        plt.savefig("graph.png")
-
-        with open("graph.png", "rb") as f:
-            st.download_button("📈 Download Graph", f)
+    st.write("✔ Monitor system")
+    st.write("✔ View usage")
+    st.write("✔ Manage users")
 
 # -----------------------------
-# PATIENT PANEL
+# PATIENT PORTAL (MODEL)
 # -----------------------------
 else:
+    st.set_page_config(page_title="DR Detection", layout="centered")
+
     st.title("👁️ Diabetic Retinopathy Detection")
+    st.markdown("### AI-powered retinal analysis")
 
-    # Patient Info
-    st.subheader("👤 Patient Details")
-
-    name = st.text_input("Full Name")
-    dob = st.date_input("Date of Birth")
-    blood_group = st.selectbox("Blood Group",
-        ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"])
-
-    def calculate_age(dob):
-        today = date.today()
-        years = today.year - dob.year
-        days = (today - dob).days
-        return years, days
-
-    age_years, age_days = calculate_age(dob)
-    st.write(f"Age: {age_years} years ({age_days} days)")
-
-    # MODEL
+    # -----------------------------
+    # MODEL CONFIG
+    # -----------------------------
     MODEL_PATH = "model.pth"
     MODEL_URL = "https://drive.google.com/uc?id=1yDdDELohhVrnI_SSRAQAbqkruoV0fBpw"
 
-    if not os.path.exists(MODEL_PATH):
-        gdown.download(MODEL_URL, MODEL_PATH)
+    labels = ["No DR", "Mild", "Moderate", "Severe", "Proliferative DR"]
 
+    # -----------------------------
+    # DOWNLOAD MODEL
+    # -----------------------------
+    if not os.path.exists(MODEL_PATH):
+        st.info("Downloading model... ⏳")
+        gdown.download(MODEL_URL, MODEL_PATH, quiet=False)
+        st.success("Model downloaded ✅")
+
+    # -----------------------------
+    # LOAD MODEL
+    # -----------------------------
     @st.cache_resource
     def load_model():
         model = timm.create_model('convnext_base', pretrained=False, num_classes=5)
-        model.load_state_dict(torch.load(MODEL_PATH, map_location="cpu", weights_only=False))
+        state_dict = torch.load(MODEL_PATH, map_location="cpu", weights_only=False)
+        model.load_state_dict(state_dict)
         model.eval()
         return model
 
     model = load_model()
-    labels = ["No DR", "Mild", "Moderate", "Severe", "Proliferative DR"]
-
-    file = st.file_uploader("Upload Retina Image")
-
-    if file and name:
-        img = Image.open(file).convert("RGB")
-        st.image(img)
-
-        image_path = "uploaded.jpg"
-        img.save(image_path)
-
-        transform = transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.ToTensor()
-        ])
-
-        input_tensor = transform(img).unsqueeze(0)
-
-        with torch.no_grad():
-            output = model(input_tensor)
-            probs = torch.softmax(output, dim=1)
-            pred = torch.argmax(probs, dim=1).item()
-
-        st.success(labels[pred])
-
-        # SAVE DB
-        db.child("predictions").push({
-            "email": user_email,
-            "name": name,
-            "prediction": labels[pred],
-            "timestamp": str(datetime.datetime.now())
-        })
-
-        # PDF
-        def generate_pdf():
-            doc = SimpleDocTemplate("report.pdf")
-            styles = getSampleStyleSheet()
-
-            content = []
-            content.append(Paragraph("Medical Report", styles["Title"]))
-            content.append(Paragraph(f"Name: {name}", styles["Normal"]))
-            content.append(Paragraph(f"DOB: {dob}", styles["Normal"]))
-            content.append(Paragraph(f"Age: {age_years} years", styles["Normal"]))
-            content.append(Paragraph(f"Blood Group: {blood_group}", styles["Normal"]))
-            content.append(Paragraph(f"Prediction: {labels[pred]}", styles["Normal"]))
-            content.append(Paragraph("Advice: Consult doctor", styles["Normal"]))
-            content.append(RLImage(image_path, width=200, height=200))
-
-            doc.build(content)
-            return "report.pdf"
-
-        pdf = generate_pdf()
-
-        with open(pdf, "rb") as f:
-            st.download_button("📄 Download Report", f)
 
     # -----------------------------
-    # NETRA CHATBOT
+    # UI
     # -----------------------------
-    st.sidebar.title("🤖 Netra")
+    st.sidebar.title("About")
+    st.sidebar.write("Upload retinal image to detect DR severity")
 
-    if "last_query_time" not in st.session_state:
-        st.session_state.last_query_time = 0
+    file = st.file_uploader("Upload Retina Image", type=["jpg", "png", "jpeg"])
 
-    query = st.sidebar.text_input("Ask about eye health")
+    if file:
+        try:
+            img = Image.open(file).convert("RGB")
+            st.image(img, caption="Uploaded Image", use_column_width=True)
 
-    def netra_ai(q):
-        response = model_gemini.generate_content(q)
-        return response.text
+            transform = transforms.Compose([
+                transforms.Resize((224, 224)),
+                transforms.ToTensor()
+            ])
 
-    if st.sidebar.button("Ask Netra"):
-        if time.time() - st.session_state.last_query_time > 5:
-            st.session_state.last_query_time = time.time()
-            st.sidebar.write(netra_ai(query))
-        else:
-            st.sidebar.warning("Wait before next query")
+            input_tensor = transform(img).unsqueeze(0)
 
-    st.sidebar.warning("Consult doctor for medical advice")
+            with torch.no_grad():
+                output = model(input_tensor)
+                probs = torch.softmax(output, dim=1)
+                pred = torch.argmax(probs, dim=1).item()
+
+            st.success(f"Prediction: {labels[pred]}")
+
+            st.subheader("Confidence Scores")
+            for i, p in enumerate(probs[0]):
+                st.write(f"{labels[i]}: {p.item()*100:.2f}%")
+
+        except Exception as e:
+            st.error("Error processing image")
+            st.text(str(e))
